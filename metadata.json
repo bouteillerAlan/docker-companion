@@ -7,9 +7,9 @@
             }
         ],
         "Category": "System Information",
-        "Description": "A very simple docker companion that if the service is launch and the number of docker started",
+        "Description": "A lightweight Docker companion that detects service launches and displays container details",
         "Icon": "update-none",
-        "Id": "a2n.dockercompanion.plasmoid",
+        "Id": "a2n.docker.plasmoid",
         "License": "GPL-3.0+",
         "Name": "Docker companion",
         "Version": "6.3.0",

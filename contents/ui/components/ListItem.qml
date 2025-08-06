@@ -27,6 +27,18 @@ PlasmaExtras.ExpandableListItem {
 
   property list<string> currentContainerDetails
 
+  // Map property names to icons
+  property var iconMapping: {
+    "ID": "username-copy",
+    "Image": "kpackagekit-updates",
+    "Status": "dialog-information",
+    "State": isRunning ? "media-playback-start" : "media-playback-stop",
+    "Size": "transform-scale",
+    "Volumes": "disk-quota",
+    "Networks": "network-wired-activated",
+    "Ports": "kdeconnect-tray"
+  }
+
   property color nameColor: Kirigami.Theme.textColor
   property color sourceColor: Kirigami.Theme.disabledTextColor
   property color runningColor: Kirigami.Theme.positiveTextColor
@@ -109,7 +121,6 @@ PlasmaExtras.ExpandableListItem {
           active: parent.activeFocus
           asynchronous: true
           z: -1
-
           sourceComponent: PlasmaExtras.Highlight {
             hovered: true
           }
@@ -118,66 +129,50 @@ PlasmaExtras.ExpandableListItem {
         GridLayout {
           id: detailsGrid
           width: parent.width
-          columns: 2
-          rowSpacing: Kirigami.Units.smallSpacing / 4
+          columns: 3
+          rowSpacing: Kirigami.Units.smallSpacing
+          columnSpacing: Kirigami.Units.largeSpacing
 
+          // icon
           Repeater {
-            id: repeater
-
-            model: root.currentContainerDetails
-
-            PlasmaComponents.Label {
-              id: detailLabel
-
-              required property int index
-              required property string modelData
-
-              readonly property bool isContent: index % 2
-
-              Layout.fillWidth: true
-
-              horizontalAlignment: isContent ? Text.AlignLeft : Text.AlignRight
-              elide: isContent ? Text.ElideRight : Text.ElideNone
-              font: Kirigami.Theme.smallFont
-              opacity: isContent ? 1 : 0.6
-              text: isContent ? modelData : modelData + ":"
-              textFormat: isContent ? Text.PlainText : Text.StyledText
+            id: rowRepeater
+            model: Math.floor(root.currentContainerDetails.length / 2)
+            Kirigami.Icon {
+              Layout.row: index
+              Layout.column: 0
+              Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
+              source: root.iconMapping[root.currentContainerDetails[index * 2]] || "dialog-question"
             }
           }
-        }
-      }
 
-      // Flow layout with icons for quick reference
-      Flow {
-        Layout.fillWidth: true
-        spacing: Kirigami.Units.largeSpacing
-        Layout.topMargin: Kirigami.Units.smallSpacing
-
-        // Each item is an icon with a tooltip
-        Repeater {
-          model: [
-            { icon: "username-copy", text: id, label: "ID" },
-            { icon: "kpackagekit-updates", text: image, label: "Image" },
-            { icon: "transform-scale", text: size, label: "Size" },
-            { icon: "disk-quota", text: localVolumes, label: "Volumes" },
-            { icon: "network-wired-activated", text: networks, label: "Networks" },
-            { icon: "kdeconnect-tray", text: ports, label: "Ports" }
-          ]
-
-          delegate: Item {
-            width: iconItem.width + Kirigami.Units.smallSpacing
-            height: iconItem.height
-
-            Kirigami.Icon {
-              id: iconItem
-              source: modelData.icon
-              width: Kirigami.Units.iconSizes.small
-              height: Kirigami.Units.iconSizes.small
+          // title
+          Repeater {
+            model: Math.floor(root.currentContainerDetails.length / 2)
+            PlasmaComponents.Label {
+              Layout.row: index
+              Layout.column: 1
+              Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+              text: root.currentContainerDetails[index * 2] + ":"
+              font: Kirigami.Theme.smallFont
+              opacity: 1
+              elide: Text.ElideNone
+              textFormat: Text.StyledText
             }
+          }
 
-            PlasmaComponents.ToolTip {
-              text: "<b>" + modelData.label + ":</b> " + modelData.text
-              width: Math.min(implicitWidth, Kirigami.Units.gridUnit * 20)
+          // label
+          Repeater {
+            model: Math.floor(root.currentContainerDetails.length / 2)
+            PlasmaComponents.Label {
+              Layout.row: index
+              Layout.column: 2
+              Layout.fillWidth: true
+              Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
+              text: root.currentContainerDetails[index * 2 + 1]
+              font: Kirigami.Theme.smallFont
+              opacity: 0.6
+              elide: Text.ElideRight
+              textFormat: Text.StyledText
             }
           }
         }
