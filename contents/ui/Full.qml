@@ -61,22 +61,22 @@ PlasmaExtras.Representation {
   }
 
   function injectList(list) {
-    var lines = list.split("\n");
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i];
+    const lines = list.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       if (line.trim() !== "") {
         try {
-          var containerData = JSON.parse(line);
-          var name = containerData.Names || "unknown";
-          var id = containerData.ID || "unknown";
-          var status = containerData.Status || "unknown";
-          var state = containerData.State || "unknown";
-          var image = containerData.Image || "unknown";
-          var localVolumes = containerData.LocalVolumes || "unknown";
-          var networks = containerData.Networks || "unknown";
-          var ports = containerData.Ports || "unknown";
-          var size = containerData.Size || "unknown";
-          var isRunning = state === "running";
+          const containerData = JSON.parse(line);
+          const name = containerData.Names || "unknown";
+          const id = containerData.ID || "unknown";
+          const status = containerData.Status || "unknown";
+          const state = containerData.State || "unknown";
+          const image = containerData.Image || "unknown";
+          const localVolumes = containerData.LocalVolumes || "unknown";
+          const networks = containerData.Networks || "unknown";
+          const ports = containerData.Ports || "unknown";
+          const size = containerData.Size || "unknown";
+          const isRunning = state === "running";
           dockerListModel.append({
             "name": name,
             "id": id,

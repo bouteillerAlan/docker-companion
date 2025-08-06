@@ -1,33 +1,39 @@
+pragma ComponentBehavior: Bound
+
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Controls as QQC2
+import QtQuick.Controls
+import QtQuick.Templates as T
 
-import org.kde.kirigami 2.20 as Kirigami
-import org.kde.kquickcontrolsaddons as KQuickControlsAddons
-import org.kde.plasma.components as PlasmaComponents
+import org.kde.coreaddons as KCoreAddons
+import org.kde.kcmutils as KCMUtils
+
+import org.kde.kirigami as Kirigami
+import org.kde.plasma.components as PlasmaComponents3
 import org.kde.plasma.extras as PlasmaExtras
-import org.kde.plasma.core as PlasmaCore
+import org.kde.plasma.networkmanagement as PlasmaNM
+import org.kde.plasma.plasmoid
+
+// property var iconMapping: {
+//     "ID": "username-copy",
+//     "Image": "kpackagekit-updates",
+//     "Status": "dialog-information",
+//     "State": isRunning ? "media-playback-start" : "media-playback-stop",
+//     "Size": "transform-scale",
+//     "Volumes": "disk-quota",
+//     "Networks": "network-wired-activated",
+//     "Ports": "kdeconnect-tray"
+//   }
+//
+//   property color nameColor: Kirigami.Theme.textColor
+//   property color sourceColor: Kirigami.Theme.disabledTextColor
+//   property color runningColor: Kirigami.Theme.positiveTextColor
+//   property color stoppedColor: Kirigami.Theme.negativeTextColor
+
 
 PlasmaExtras.ExpandableListItem {
-  id: root
+  id: dockerItem
 
-  required property int index
-
-  // Docker container properties directly injected from the model
-  required property string name
-  required property string id
-  required property string status
-  required property string state
-  required property bool isRunning
-  required property string image
-  required property string localVolumes
-  required property string networks
-  required property string ports
-  required property string size
-
-  property list<string> currentContainerDetails
-
-  // Map property names to icons
   property var iconMapping: {
     "ID": "username-copy",
     "Image": "kpackagekit-updates",
@@ -39,196 +45,84 @@ PlasmaExtras.ExpandableListItem {
     "Ports": "kdeconnect-tray"
   }
 
-  property color nameColor: Kirigami.Theme.textColor
-  property color sourceColor: Kirigami.Theme.disabledTextColor
-  property color runningColor: Kirigami.Theme.positiveTextColor
-  property color stoppedColor: Kirigami.Theme.negativeTextColor
+  function copy(text) {
+    plasmoid.nativeInterface.clipboardContents = text;
+  }
 
+  Rectangle {
+    id: hoverOverlay
+    anchors.fill: parent
+    z: -1  // behind the content
+    color: mouseArea.containsMouse ? Qt.rgba(Kirigami.Theme.hoverColor.r, Kirigami.Theme.hoverColor.g, Kirigami.Theme.hoverColor.b, 0.25) : "transparent"
+    radius: Kirigami.Units.smallSpacing
+    Behavior on color {
+      ColorAnimation {
+        duration: 150
+      }
+    }
+  }
+
+  MouseArea {
+    id: mouseArea
+    anchors.fill: parent
+    hoverEnabled: true
+    // Don't eat clicks — let underlying items handle them
+    acceptedButtons: Qt.NoButton
+  }
+
+  // header
   icon: isRunning ? "media-playback-start" : "media-playback-stop"
   title: name
-  subtitle: infoText()
-  isBusy: false
-  isDefault: isRunning
+  subtitle: id
+  isBusy: mainWindow.expanded && main.isOnUpdate
 
-  defaultActionButtonAction: QQC2.Action {
-    icon.name: root.isRunning ? "media-playback-stop" : "media-playback-start"
-    text: root.isRunning ? i18n("Stop") : i18n("Start")
-    onTriggered: function() {
-      // todo add cmd
-      console.log("Toggle container:", id);
-    }
+  // btn next to header
+  defaultActionButtonAction: Action {
+    id: stateChangeButton
+    enabled: true
+    icon.name: isRunning ? "media-playback-stop" : "media-playback-start"
+    text: isRunning ? i18n("Stop") : i18n("Start")
+    onTriggered: isRunning ? cmdSource.exec(`docker stop ${id}`) : cmdSource.exec(`docker start ${id}`)
   }
+  showDefaultActionButtonWhenBusy: false
 
-  // Container details in expandable section
-  customExpandedViewContent: Component {
-    id: expandedView
-
-    ColumnLayout {
-      spacing: 0
-
-      KQuickControlsAddons.Clipboard {
-        id: clipboard
-      }
-
-      PlasmaExtras.Menu {
-        id: contextMenu
-        property string text
-
-        function show(visualParent, text, x, y) {
-          this.visualParent = visualParent;
-          this.text = text;
-          open(x, y);
-        }
-
-        PlasmaExtras.MenuItem {
-          text: i18n("Copy")
-          icon: "edit-copy-symbolic"
-          enabled: contextMenu.text !== ""
-          onClicked: clipboard.content = contextMenu.text
-        }
-      }
-
-      // Details
-      MouseArea {
-        Layout.fillWidth: true
-        Layout.preferredHeight: detailsGrid.implicitHeight
-
-        acceptedButtons: Qt.RightButton
-        activeFocusOnTab: repeater.count > 0
-
-        Accessible.description: {
-          var description = [];
-          for (var i = 0; i < root.currentContainerDetails.length; i += 2) {
-            description.push(root.currentContainerDetails[i]);
-            description.push(": ");
-            description.push(root.currentContainerDetails[i + 1]);
-            description.push("; ");
-          }
-          return description.join('');
-        }
-
-        onPressed: function(mouse) {
-          var item = detailsGrid.childAt(mouse.x, mouse.y);
-          if (!item || !item.isContent) {
-            return; // only let users copy the value on the right
-          }
-
-          contextMenu.show(this, item.text, mouse.x, mouse.y);
-        }
-
-        Loader {
-          anchors.fill: parent
-          active: parent.activeFocus
-          asynchronous: true
-          z: -1
-          sourceComponent: PlasmaExtras.Highlight {
-            hovered: true
-          }
-        }
-
-        GridLayout {
-          id: detailsGrid
-          width: parent.width
-          columns: 3
-          rowSpacing: Kirigami.Units.smallSpacing
-          columnSpacing: Kirigami.Units.largeSpacing
-
-          // icon
-          Repeater {
-            id: rowRepeater
-            model: Math.floor(root.currentContainerDetails.length / 2)
-            Kirigami.Icon {
-              Layout.row: index
-              Layout.column: 0
-              Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
-              source: root.iconMapping[root.currentContainerDetails[index * 2]] || "dialog-question"
-            }
-          }
-
-          // title
-          Repeater {
-            model: Math.floor(root.currentContainerDetails.length / 2)
-            PlasmaComponents.Label {
-              Layout.row: index
-              Layout.column: 1
-              Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-              text: root.currentContainerDetails[index * 2] + ":"
-              font: Kirigami.Theme.smallFont
-              opacity: 1
-              elide: Text.ElideNone
-              textFormat: Text.StyledText
-            }
-          }
-
-          // label
-          Repeater {
-            model: Math.floor(root.currentContainerDetails.length / 2)
-            PlasmaComponents.Label {
-              Layout.row: index
-              Layout.column: 2
-              Layout.fillWidth: true
-              Layout.alignment: Qt.AlignLeft | Qt.AlignVCenter
-              text: root.currentContainerDetails[index * 2 + 1]
-              font: Kirigami.Theme.smallFont
-              opacity: 0.6
-              elide: Text.ElideRight
-              textFormat: Text.StyledText
-            }
-          }
-        }
-      }
-
-      Component.onCompleted: {
-        root.createContent();
-      }
+  // list of btn for infos
+  contextualActions: [
+    Action {
+      text: `ID: ${id}`
+      icon.name: iconMapping["ID"]
+      onTriggered: copy(id)
+    },
+    Action {
+      text: `Image: ${image}`
+      icon.name: iconMapping["Image"]
+      onTriggered: copy(image)
+    },
+    Action {
+      text: `Status: ${status}`
+      icon.name: iconMapping["Status"]
+      onTriggered: copy(status)
+    },
+    Action {
+      text: `Size: ${size}`
+      icon.name: iconMapping["Size"]
+      onTriggered: copy(size)
+    },
+    Action {
+      text: `Local vlm: ${localVolumes}`
+      icon.name: iconMapping["Volumes"]
+      onTriggered: copy(localVolumes)
+    },
+    Action {
+      text: `Networks: ${networks}`
+      icon.name: iconMapping["Networks"]
+      onTriggered: copy(networks)
+    },
+    Action {
+      text: `Ports: ${ports}`
+      icon.name: iconMapping["Ports"]
+      onTriggered: copy(ports)
     }
-  }
+  ]
 
-  function createContent() {
-    const details = [];
-
-    details.push(i18n("ID"));
-    details.push(id);
-
-    details.push(i18n("Image"));
-    details.push(image);
-
-    details.push(i18n("Status"));
-    details.push(status);
-
-    details.push(i18n("State"));
-    details.push(state);
-
-    details.push(i18n("Size"));
-    details.push(size);
-
-    details.push(i18n("Volumes"));
-    details.push(localVolumes);
-
-    details.push(i18n("Networks"));
-    details.push(networks);
-
-    details.push(i18n("Ports"));
-    details.push(ports);
-
-    currentContainerDetails = details;
-  }
-
-  function infoText() {
-    const labels = [];
-
-    if (isRunning) {
-      labels.push(i18n("Running"));
-    } else {
-      labels.push(i18n("Stopped"));
-    }
-
-    labels.push(status);
-
-    if (image) {
-      labels.push(image);
-    }
-
-    return labels.join(" · ");
-  }
 }
