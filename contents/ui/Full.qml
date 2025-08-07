@@ -61,23 +61,24 @@ PlasmaExtras.Representation {
   }
 
   function injectList(list) {
-    const lines = list.split("\n");
+    const lines = list.split("\n")
+    const datas = []
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       if (line.trim() !== "") {
         try {
-          const containerData = JSON.parse(line);
-          const name = containerData.Names || "unknown";
-          const id = containerData.ID || "unknown";
-          const status = containerData.Status || "unknown";
-          const state = containerData.State || "unknown";
-          const image = containerData.Image || "unknown";
-          const localVolumes = containerData.LocalVolumes || "unknown";
-          const networks = containerData.Networks || "unknown";
-          const ports = containerData.Ports || "unknown";
-          const size = containerData.Size || "unknown";
-          const isRunning = state === "running";
-          dockerListModel.append({
+          const containerData = JSON.parse(line)
+          const name = containerData.Names || "unknown"
+          const id = containerData.ID || "unknown"
+          const status = containerData.Status || "unknown"
+          const state = containerData.State || "unknown"
+          const image = containerData.Image || "unknown"
+          const localVolumes = containerData.LocalVolumes || "unknown"
+          const networks = containerData.Networks || "unknown"
+          const ports = containerData.Ports || "unknown"
+          const size = containerData.Size || "unknown"
+          const isRunning = state === "running"
+          datas.push({
             "name": name,
             "id": id,
             "status": status,
@@ -88,15 +89,21 @@ PlasmaExtras.Representation {
             "networks": networks,
             "ports": ports,
             "size": size
-          });
+          })
         } catch (error) {
-          console.log("Error parsing JSON line:", error);
+          console.log("Error parsing JSON line:", error)
         }
       }
     }
+    datas.sort((a, b) => {
+      if (a.isRunning !== b.isRunning) {
+        return b.isRunning - a.isRunning
+      }
+      return a.name.localeCompare(b.name)
+    })
+    dockerListModel.append(datas)
   }
 
-  // list of the packages
   ListModel { id: dockerListModel }
 
   // topbar
@@ -173,11 +180,13 @@ PlasmaExtras.Representation {
       id: packageView
       anchors.rightMargin: Kirigami.Units.gridUnit
       model: dockerListModel
-      delegate: Components.ListItem {} // automatically inject the data from the model
+      highlight: PlasmaExtras.Highlight {}
+      highlightMoveDuration: Kirigami.Units.shortDuration
+      highlightResizeDuration: Kirigami.Units.shortDuration
+      delegate: Components.ListItem {}
     }
   }
 
-  // if not update is needed
   PlasmaExtras.PlaceholderMessage {
     id: upToDateLabel
     text: i18n("Docker is not running !")

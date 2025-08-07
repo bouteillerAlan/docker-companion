@@ -1,10 +1,9 @@
-pragma ComponentBehavior: Bound
-
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Templates as T
 
+import org.kde.kquickcontrolsaddons as KQuickControlsAddons
 import org.kde.coreaddons as KCoreAddons
 import org.kde.kcmutils as KCMUtils
 
@@ -13,23 +12,6 @@ import org.kde.plasma.components as PlasmaComponents3
 import org.kde.plasma.extras as PlasmaExtras
 import org.kde.plasma.networkmanagement as PlasmaNM
 import org.kde.plasma.plasmoid
-
-// property var iconMapping: {
-//     "ID": "username-copy",
-//     "Image": "kpackagekit-updates",
-//     "Status": "dialog-information",
-//     "State": isRunning ? "media-playback-start" : "media-playback-stop",
-//     "Size": "transform-scale",
-//     "Volumes": "disk-quota",
-//     "Networks": "network-wired-activated",
-//     "Ports": "kdeconnect-tray"
-//   }
-//
-//   property color nameColor: Kirigami.Theme.textColor
-//   property color sourceColor: Kirigami.Theme.disabledTextColor
-//   property color runningColor: Kirigami.Theme.positiveTextColor
-//   property color stoppedColor: Kirigami.Theme.negativeTextColor
-
 
 PlasmaExtras.ExpandableListItem {
   id: dockerItem
@@ -45,34 +27,18 @@ PlasmaExtras.ExpandableListItem {
     "Ports": "kdeconnect-tray"
   }
 
+  KQuickControlsAddons.Clipboard {
+    id: clipboard
+  }
+
   function copy(text) {
-    plasmoid.nativeInterface.clipboardContents = text;
-  }
-
-  Rectangle {
-    id: hoverOverlay
-    anchors.fill: parent
-    z: -1  // behind the content
-    color: mouseArea.containsMouse ? Qt.rgba(Kirigami.Theme.hoverColor.r, Kirigami.Theme.hoverColor.g, Kirigami.Theme.hoverColor.b, 0.25) : "transparent"
-    radius: Kirigami.Units.smallSpacing
-    Behavior on color {
-      ColorAnimation {
-        duration: 150
-      }
-    }
-  }
-
-  MouseArea {
-    id: mouseArea
-    anchors.fill: parent
-    hoverEnabled: true
-    // Don't eat clicks — let underlying items handle them
-    acceptedButtons: Qt.NoButton
+    clipboard.content = text
   }
 
   // header
   icon: isRunning ? "media-playback-start" : "media-playback-stop"
-  title: name
+  allowStyledText: true
+  title: "<font color='"+(isRunning ? Kirigami.Theme.positiveTextColor : Kirigami.Theme.negativeTextColor)+"'>"+name+"</font>"
   subtitle: id
   isBusy: mainWindow.expanded && main.isOnUpdate
 
