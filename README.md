@@ -5,13 +5,9 @@
 </p>
 <h1 align="center">Docker companion <i>- a plasma widget</i></h1>
 
----
-
 <img alt="Static Badge" src="https://img.shields.io/badge/Still_maintened-Yes_%3A)-green">
 
 # Description
-
----
 
 A lightweight Docker companion that detects service launches and displays container details.
 
@@ -23,8 +19,6 @@ Features:
 - Refreshes automatically at configurable intervals
 
 # Installation
-
----
 
 ### Via the KDE menu
 
@@ -48,8 +42,6 @@ Go to the 'System Tray Settings' menu and activate it :)
 
 # Configuration
 
----
-
 The plasmoid offers several configuration options to customize its behavior and appearance:
 
 | Name                   | Description                                                                                       | Result                                                                                 |
@@ -70,8 +62,6 @@ The plasmoid offers several configuration options to customize its behavior and 
 
 # Code of conduct, license, authors, changelog, contributing
 
----
-
 See the following file:
 - [code of conduct](CODE_OF_CONDUCT.md)
 - [license](LICENSE)
@@ -82,13 +72,9 @@ See the following file:
 
 # Want to participate? Have a bug or a request feature?
 
----
-
 Do not hesitate to open a PR or an issue. I reply when I can.
 
 # Want to support my work?
-
----
 
 - [Give me a tips](https://ko-fi.com/a2n00)
 - [Give a star on github](https://github.com/bouteillerAlan/dockercompanion)
