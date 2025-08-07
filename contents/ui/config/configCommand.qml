@@ -9,10 +9,10 @@ Kirigami.ScrollablePage {
   id: commandConfigPage
 
   property alias cfg_updateInterval: updateIntervalSpin.value
-  property string cfg_checkActiveCommand: checkActiveCommandInput.text
-  property string cfg_countActiveCommand: countActiveCommandInput.text
-  property string cfg_countAllCommand: countAllCommandInput.text
-  property string cfg_listCommand: listCommandInput.text
+  property alias cfg_checkActiveCommand: checkActiveCommandInput.text
+  property alias cfg_countActiveCommand: countActiveCommandInput.text
+  property alias cfg_countAllCommand: countAllCommandInput.text
+  property alias cfg_listCommand: listCommandInput.text
 
   ColumnLayout {
     anchors {
@@ -34,9 +34,9 @@ Kirigami.ScrollablePage {
         id: updateIntervalSpin
         Kirigami.FormData.label: "Update every: "
         from: 1
-        to: 1440 // 1 day
+        to: 60
         editable: true
-        textFromValue: (value) => value + " minute(s)"
+        textFromValue: (value) => value + " second(s)"
         valueFromText: (text) => parseInt(text)
       }
     }
